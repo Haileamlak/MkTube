@@ -1,6 +1,6 @@
-# mk_tv_app
+# mk_tube
 
-A new Flutter project.
+A Vide Streaming App Flutter project.
 
 ## Getting Started
 
