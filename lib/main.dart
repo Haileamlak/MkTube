@@ -1,15 +1,25 @@
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:mk_tv_app/route/VideoPlay.dart';
+import 'package:mk_tv_app/firebase_options.dart';
+import 'package:mk_tv_app/model/SettingModel.dart';
+import 'package:mk_tv_app/model/libraryModel.dart';
+import 'package:mk_tv_app/model/videoListModel.dart';
+import 'package:mk_tv_app/route/library.dart';
 import 'package:mk_tv_app/routes.dart';
+import 'package:mk_tv_app/widget/MkDrawer.dart';
+import 'package:provider/provider.dart';
 import 'route/Home.dart';
 import 'route/Tv.dart';
-import 'route/Library.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const MyApp());
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider<VideoListModel>(create: (_) => VideoListModel()),
+    ChangeNotifierProvider<LibraryModel>(create: (_) => LibraryModel()),
+    ChangeNotifierProvider<SettingModel>(create: (_) => SettingModel()),
+  ], child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -18,19 +28,28 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      initialRoute: RouteGenerator.homePage,
-      onGenerateRoute: RouteGenerator.generateRoute,
-      theme: ThemeData(
-        useMaterial3: true,
-        navigationBarTheme:
-            const NavigationBarThemeData(indicatorColor: Colors.amber),
-        primaryColor: Colors.blue,
-        primarySwatch: Colors.blue,
+    return Consumer<SettingModel>(
+      builder: (context, value, child) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'MK TV',
+        initialRoute: RouteGenerator.homePage,
+        onGenerateRoute: RouteGenerator.generateRoute,
+        theme: value.darkMode
+            ? ThemeData.dark(useMaterial3: true)
+            : ThemeData(
+                useMaterial3: true,
+                navigationBarTheme:
+                    const NavigationBarThemeData(indicatorColor: Colors.amber),
+                primaryColor: Colors.blue,
+                primarySwatch: Colors.blue,
+              ),
+        home: AnimatedSplashScreen(
+            splash: "lib/myassets/mklogo.png",
+            curve: Curves.easeInOut,
+            splashIconSize: 256,
+            nextScreen: const MyHomePage(title: 'ማኅበረ ቅዱሳን ቴቪ'),
+            splashTransition: SplashTransition.scaleTransition),
       ),
-      home: const MyHomePage(title: 'ማኅበረ ቅዱሳን ቴቪ'),
     );
   }
 }
@@ -57,10 +76,10 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       // appBar: AppBar(
-      //   title: Text
-      // (widget.title),
+      //   title: Text(widget.title),
       // ),
-      drawer: const Drawer(),
+
+      drawer: const MkDrawer(),
       body: const <Widget>[Home(), Tv(), Library()][index],
       bottomNavigationBar: NavigationBar(
         destinations: const [

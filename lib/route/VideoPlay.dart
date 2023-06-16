@@ -1,82 +1,160 @@
-﻿import 'package:appinio_video_player/appinio_video_player.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
-import 'package:mk_tv_app/route/Home.dart';
+import 'package:mk_tv_app/model/videoPlayModel.dart';
+import 'package:provider/provider.dart';
 
 class VideoPlay extends StatelessWidget {
-  const VideoPlay();
+  final videoInformation;
+  const VideoPlay({super.key, this.videoInformation});
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Video detail"),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.amber,
+    return ChangeNotifierProvider<VideoPlayModel>(
+      create: (context) => VideoPlayModel(videoInfo: videoInformation),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Consumer<VideoPlayModel>(
+              builder: (context, value, child) => value.canPlay
+                  ? const Icon(Icons.ondemand_video)
+                  : const Text("Loading...")),
+          // backgroundColor: Colors.blue,
+          foregroundColor: Colors.amber,
+        ),
+        body: const Column(
+          children: [
+            Video(),
+            VideoFullInfo(),
+          ],
+        ),
       ),
-      body: ListView(
+    );
+  }
+}
+
+class Video extends StatelessWidget {
+  const Video({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<VideoPlayModel>(builder: (context, value, child) {
+      return !value.canPlay
+          ? const AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Center(
+                  child: CircularProgressIndicator(
+                color: Colors.white,
+                backgroundColor: Colors.amber,
+              )))
+          : AspectRatio(
+              aspectRatio: value.customController.aspectRatio ?? 16 / 9,
+              child: Chewie(controller: value.customController));
+    });
+  }
+}
+
+class VideoFullInfo extends StatelessWidget {
+  const VideoFullInfo({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: ListView(
         children: const [
-          Video(),
-          VideoInfo(),
-          // VideoActions(),
+          FullVideoTitle(),
+          FullVideoCategory(),
+          SizedBox(
+            height: 50,
+            child: Center(child: VideoActionButtons()),
+          ),
+          VideoDescription(),
+          Divider(),
+          // Divider(),
         ],
       ),
     );
   }
 }
 
-class Video extends StatefulWidget {
-  const Video();
-
-  @override
-  State<Video> createState() => _VideoState();
-}
-
-class _VideoState extends State<Video> {
-  late FirebaseStorage storage;
-  late VideoPlayerController controller;
-  late CustomVideoPlayerController customController;
-  late Future<String> url;
-  @override
-  void initState() {
-    super.initState();
-    storage = FirebaseStorage.instance;
-    url = storage.ref().child("videos").child("intro1.mp4").getDownloadURL();
-
-    url.then((value) {
-      print(value);
-      print(value);
-      print(value);
-      print(value);
-      print(value);
-      print(value);
-      controller = VideoPlayerController.network(value);
-      controller.initialize().then((value) {
-        setState(() {});
-      });
-    });
-    controller = VideoPlayerController.asset("lib/myassets/geezm.mp4");
-    controller.initialize().then((value) => {setState(() {})});
-    customController = CustomVideoPlayerController(
-        context: context, videoPlayerController: controller);
-
-    // setState(() {})
-  }
-
-  @override
-  void dispose() {
-    customController.dispose();
-    controller.dispose();
-    super.dispose();
-  }
-
+class FullVideoTitle extends StatelessWidget {
+  const FullVideoTitle({super.key});
   @override
   Widget build(BuildContext context) {
-    if (controller == null || !controller.value.isInitialized)
-      return Container(
-          height: 300, child: Center(child: CircularProgressIndicator()));
-    return Container(
-      child: CustomVideoPlayer(customVideoPlayerController: customController),
+    return Consumer<VideoPlayModel>(
+      builder: (context, value, child) => Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
+        child: Text(
+          value.videoInfo.title ?? "",
+          textAlign: TextAlign.left,
+          style: const TextStyle(fontSize: 16, height: 1),
+        ),
+      ),
+    );
+  }
+}
+
+class VideoDescription extends StatelessWidget {
+  const VideoDescription({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<VideoPlayModel>(
+      builder: (context, value, child) => Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
+        child: Text(
+          value.videoInfo.description ?? "",
+          textAlign: TextAlign.left,
+          style: const TextStyle(fontSize: 16, height: 1),
+        ),
+      ),
+    );
+  }
+}
+
+class VideoActionButtons extends StatelessWidget {
+  const VideoActionButtons({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      scrollDirection: Axis.horizontal,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: ElevatedButton.icon(
+              label: const Text("watch later"),
+              onPressed: () {},
+              icon: const Icon(Icons.watch_later_outlined)),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: ElevatedButton.icon(
+              label: const Text("share"),
+              onPressed: () {},
+              icon: const Icon(Icons.share)),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: ElevatedButton.icon(
+              label: const Text("download"),
+              onPressed: () {},
+              icon: const Icon(Icons.download_rounded)),
+        ),
+      ],
+    );
+  }
+}
+
+class FullVideoCategory extends StatelessWidget {
+  const FullVideoCategory({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<VideoPlayModel>(
+      builder: (context, value, child) => Padding(
+        padding: const EdgeInsets.only(left: 20, top: 5, bottom: 5),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            "${value.videoInfo.programName ?? ""} - ${value.videoInfo.releaseDate?.day}/${value.videoInfo.releaseDate?.month}/${value.videoInfo.releaseDate?.year}",
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w300),
+          ),
+        ),
+      ),
     );
   }
 }

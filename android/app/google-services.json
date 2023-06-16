@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "990724550864",
+    "firebase_url": "https://mahibere-kidusan-tv-app-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "mahibere-kidusan-tv-app",
     "storage_bucket": "mahibere-kidusan-tv-app.appspot.com"
   },
@@ -29,6 +30,13 @@
             {
               "client_id": "990724550864-ej03okps7akvupa6vf2sts0d9arbmuff.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "990724550864-68qclbma3see9qfqpb68blql15o0d24v.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mkTvApp"
+              }
             }
           ]
         }
