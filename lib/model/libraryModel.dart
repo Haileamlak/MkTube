@@ -11,9 +11,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LibraryModel with ChangeNotifier {
   final storage = FirebaseStorage.instance;
-  List<VideoInformation> downloading = [];
-  List<DownloadTask> downloadProgresses = [];
-  List<Map<String, dynamic>> downloaded = [];
+  List<VideoInformation> downloading =
+      []; //information about the downloading videos
+  List<DownloadTask> downloadProgresses =
+      []; //progress indicators for the downloading videos
+  List<Map<String, dynamic>> downloaded =
+      []; //information about downloaded videos
   bool noDownloads = false;
 
   LibraryModel() {
@@ -48,20 +51,24 @@ class LibraryModel with ChangeNotifier {
     downloading.removeAt(index);
     try {
       if (downloadProgresses.length > index) {
-        await downloadProgresses[index].cancel();
+        if (downloadProgresses[index].snapshot.state != TaskState.paused ||
+            downloadProgresses[index].snapshot.state != TaskState.running) {
+          await downloadProgresses[index].cancel();
+        }
 
         downloadProgresses.removeAt(index);
 
         notifyListeners();
         return true;
       } else {
-        debugPrint("no delete");
+        debugPrint("no cancel");
       }
     } on Exception catch (e) {
       if (kDebugMode) {
         print(e);
       }
     }
+    notifyListeners();
     return false;
   }
 
@@ -69,29 +76,7 @@ class LibraryModel with ChangeNotifier {
     downloading.add(videoInfo);
     int index = downloading.length - 1;
     await downloadVideo(index);
-    switch (downloadProgresses[index].snapshot.state) {
-      case TaskState.paused:
-        // TODO: Handle this case.
-        break;
-      case TaskState.running:
-        // TODO: Handle this case.
-        break;
-      case TaskState.success:
-        {
-          await onDownloadSuccess(index);
 
-          downloadProgresses.removeAt(index);
-          downloading.removeAt(index);
-        }
-        break;
-      case TaskState.canceled:
-      case TaskState.error:
-        {
-          downloadProgresses.removeAt(index);
-          downloading.removeAt(index);
-        }
-        break;
-    }
     notifyListeners();
   }
 
@@ -105,12 +90,35 @@ class LibraryModel with ChangeNotifier {
       final downloadTask =
           storage.refFromURL(downloading[index].videoUrl!).writeToFile(file);
 
-      downloadProgresses.add(downloadTask);
-      notifyListeners();
+      downloadTask.then((p0) async {
+        // switch (p0.state) {
+        //   case TaskState.paused:
+        //     // TODO: Handle this case.
+        //     break;
+        //   case TaskState.running:
+        //     // TODO: Handle this case.
+        //     break;
+        //   case TaskState.success:
+        //     {
+              await onDownloadSuccess(index);
 
-      downloadTask.then((p0) {
+              // downloadProgresses.removeAt(index);
+              // downloading.removeAt(index);
+        //     }
+        //     break;
+        //   case TaskState.canceled:
+        //   case TaskState.error:
+        //     {
+        //       downloadProgresses.removeAt(index);
+        //       downloading.removeAt(index);
+        //     }
+        //     break;
+        // }
         notifyListeners();
       });
+
+      downloadProgresses.add(downloadTask);
+      notifyListeners();
     } on Exception catch (e) {
       debugPrint(e.toString());
       notifyListeners();
@@ -131,19 +139,21 @@ class LibraryModel with ChangeNotifier {
     } else {
       listOfKeys = [mapKey];
     }
-
 // Define a map to store
     Map<String, dynamic> myMap = {
       'videoName': downloading[index].videoName ?? "",
       'title': downloading[index].title ?? "NoTitle",
       "description": downloading[index].description ?? "",
       "programName": downloading[index].programName ?? "",
-      'releaseDateAndTime': downloading[index].releaseDate ?? "",
+      'releaseDateAndTime':
+          downloading[index].releaseDate?.millisecondsSinceEpoch ?? "",
     };
 
 // Save the map to shared_preferences
     final isDownloaded = await getprefs.setString(mapKey, json.encode(myMap));
     if (isDownloaded) await getprefs.setStringList(downloadListKey, listOfKeys);
+    getDownloads();//reload the downloaded videos
+    notifyListeners();
   }
 
   Future<String> _createFile(String fileName) async {
@@ -155,13 +165,13 @@ class LibraryModel with ChangeNotifier {
         String? apDownloadsPath = await AndroidPathProvider.downloadsPath;
         filePath = '$apDownloadsPath/$fileName';
       } else if (Platform.isIOS) {
-        String? apDownloadsPath = (await getDownloadsDirectory())?.path;
+        final downloadsDirectory = await getDownloadsDirectory();
+        String? apDownloadsPath = downloadsDirectory?.path;
         filePath = '$apDownloadsPath/$fileName';
       }
     } on Exception {
-      print("Could not find Downloads directory!");
+      debugPrint("Could not find Downloads directory!");
     }
-
     return filePath;
   }
 

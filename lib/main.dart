@@ -2,6 +2,8 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mk_tv_app/firebase_options.dart';
+import 'package:mk_tv_app/localization/app_localization.dart';
+import 'package:mk_tv_app/localization/localization_delegate.dart';
 import 'package:mk_tv_app/model/SettingModel.dart';
 import 'package:mk_tv_app/model/libraryModel.dart';
 import 'package:mk_tv_app/model/videoListModel.dart';
@@ -25,15 +27,29 @@ Future main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  // This widget is the root of the application.
   @override
   Widget build(BuildContext context) {
     return Consumer<SettingModel>(
       builder: (context, value, child) => MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'MK TV',
+        title: 'MkTube',
         initialRoute: RouteGenerator.homePage,
         onGenerateRoute: RouteGenerator.generateRoute,
+        localizationsDelegates: const [
+          AppLocalizationDelegate(),
+// Global localization delegates provice localized
+// strings and other values for the Material and
+// Cupertino libraries. They support 70+ locales!
+//           GlobalMaterialLocalizations.delegate,
+//           GlobalCupertinoLocalizations.delegate,
+//           GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale.fromSubtags(languageCode: "en"),
+          Locale.fromSubtags(languageCode: "am"),
+          Locale.fromSubtags(languageCode: "gez"),
+        ],
         theme: value.darkMode
             ? ThemeData.dark(useMaterial3: true)
             : ThemeData(
@@ -42,12 +58,14 @@ class MyApp extends StatelessWidget {
                     const NavigationBarThemeData(indicatorColor: Colors.amber),
                 primaryColor: Colors.blue,
                 primarySwatch: Colors.blue,
+                snackBarTheme:
+                    const SnackBarThemeData(backgroundColor: Colors.lightBlue),
               ),
         home: AnimatedSplashScreen(
             splash: "lib/myassets/mklogo.png",
             curve: Curves.easeInOut,
             splashIconSize: 256,
-            nextScreen: const MyHomePage(title: 'ማኅበረ ቅዱሳን ቴቪ'),
+            nextScreen: const MyHomePage(),
             splashTransition: SplashTransition.scaleTransition),
       ),
     );
@@ -55,9 +73,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -82,21 +98,21 @@ class _MyHomePageState extends State<MyHomePage> {
       drawer: const MkDrawer(),
       body: const <Widget>[Home(), Tv(), Library()][index],
       bottomNavigationBar: NavigationBar(
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            label: "Home",
-            icon: Icon(Icons.church_outlined),
-            selectedIcon: Icon(Icons.church),
+            label: context.localize("home"),
+            icon: const Icon(Icons.church_outlined),
+            selectedIcon: const Icon(Icons.church),
           ),
           NavigationDestination(
-            label: "TV",
-            icon: Icon(Icons.live_tv),
-            selectedIcon: Icon(Icons.live_tv_outlined),
+            label: context.localize("live"),
+            icon: const Icon(Icons.live_tv),
+            selectedIcon: const Icon(Icons.live_tv_outlined),
           ),
           NavigationDestination(
-            label: "Library",
-            icon: Icon(Icons.video_library_outlined),
-            selectedIcon: Icon(Icons.video_library_rounded),
+            label: context.localize("library"),
+            icon: const Icon(Icons.video_library_outlined),
+            selectedIcon: const Icon(Icons.video_library_rounded),
           )
         ],
         height: 60,

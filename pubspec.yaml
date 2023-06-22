@@ -54,7 +54,6 @@ dependencies:
   auto_animated_list: ^1.0.4
   android_path_provider: ^0.3.0
   agora_token_service: ^0.1.2
-  fluttertoast: ^8.2.2
 
 dev_dependencies:
   flutter_test:

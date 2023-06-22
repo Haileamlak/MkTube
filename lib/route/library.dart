@@ -19,36 +19,43 @@ class Library extends StatelessWidget {
           ],
         ),
         foregroundColor: Colors.lightBlue,
-      ),drawer: const MkDrawer(),
+      ),
+      drawer: const MkDrawer(),
       body: ListView(
-        children:  [
+        children: [
           // Padding(padding: EdgeInsets.all(30)),
-         
+
           Card(
             child: ListTile(
               onTap: () {
                 Navigator.pushNamed(context, RouteGenerator.downloaded);
               },
-              leading:const Icon(Icons.video_file),
-              title:const Text("Downloaded"),
+              leading: const Icon(Icons.video_file),
+              title: const Text("Downloaded"),
+              textColor: Colors.lightBlue,
             ),
           ),
           Card(
-            child: ListTile( onTap: () {
+            child: ListTile(
+              onTap: () {
                 Navigator.pushNamed(context, RouteGenerator.savedVideos);
               },
-              leading:const Icon(Icons.watch_later),
-              title:const Text("Saved "),
+              leading: const Icon(Icons.watch_later),
+              title: const Text("Saved "),
+              textColor: Colors.lightBlue,
             ),
           ),
           Card(
-            child: ListTile( onTap: () {
+            child: ListTile(
+              onTap: () {
                 Navigator.pushNamed(context, RouteGenerator.downloading);
               },
-              leading:const Icon(Icons.downloading),
-              title:const Text("Downloading"),
+              leading: const Icon(Icons.downloading),
+              title: const Text("Downloading"),
+              textColor: Colors.lightBlue,
             ),
-          ),const Center(
+          ),
+          const Center(
               child: Image(
             // color: Colors.grey,
             image: AssetImage("lib/myassets/mklogo.png"),

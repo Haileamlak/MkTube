@@ -21,7 +21,7 @@ class RouteGenerator {
     switch (settings.name) {
       case homePage:
         return CupertinoPageRoute(
-          builder: (_) => const MyHomePage(title: "ማኅበረ ቅዱሳን ቴቪ"),
+          builder: (_) => const MyHomePage(),
         );
       case videoPage:
         return CupertinoPageRoute(

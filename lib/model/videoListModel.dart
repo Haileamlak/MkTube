@@ -9,7 +9,7 @@ class VideoListModel with ChangeNotifier {
   final database = FirebaseDatabase.instance;
   final storage = FirebaseStorage.instance;
   List<VideoInformation?> listOfVideos = [];
-  
+
   int currentIndex = 0;
   // Map<int, Future<Response>> downloading = {};
   // late final videosStream;
@@ -36,8 +36,7 @@ class VideoListModel with ChangeNotifier {
           .startAfter(listOfVideos.last, key: startAfter)
           .orderByKey()
           .once();
-    }
-    {
+    } else {
       dataSnapshot = await database.ref("videoinformation").orderByKey().once();
     }
     final videoInfoMap = dataSnapshot.snapshot.value as Map<dynamic, dynamic>?;

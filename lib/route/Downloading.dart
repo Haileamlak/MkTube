@@ -1,7 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:mk_tv_app/model/libraryModel.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Downloading extends StatelessWidget {
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
@@ -32,44 +35,86 @@ class Downloading extends StatelessWidget {
                 final progress =
                     value.downloadProgresses[index].snapshot.bytesTransferred /
                         value.downloadProgresses[index].snapshot.totalBytes;
-                return Dismissible(
-                  onDismissed: (direction) async {
-                    if (await value.cancelDownload(index)) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Download Cancelled!")));
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content:
-                              Text("Something Went Wrong while Cancelling!")));
-                    }
-                  },
-                  key: ValueKey(index),
-                  background: Container(color: Colors.red,),
-                  child: Card(
-                    margin: const EdgeInsets.all(5),
-                    child: ListTile(
-                      textColor: Colors.green,
-                      leading: progress == 1
-                          ? const Icon(Icons.video_file)
-                          : CircularProgressIndicator(value: progress),
-                      title: Text(
-                        value.downloading[index].title ?? "No Title",
-                        maxLines: 1,
+                return Container(
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                          child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: CachedNetworkImage(
+                              imageUrl:
+                                  value.downloading[index].thumbnailUrl ?? "",
+                              height: 100,
+                              placeholder: (context, url) =>
+                                  const Center(child: Icon(Icons.video_file)),
+                            ),
+                          ),
+                          
+                          progress == 1
+                              ? const Icon(
+                                  Icons.done,
+                                  color: Colors.green,
+                                  size: 50,
+                                )
+                              : Container(
+                                  padding:
+                                      const EdgeInsets.only(top: 15, left: 16),
+                                  child: CircularProgressIndicator(strokeWidth: 10,
+                                      color: Colors.lightBlue, value: progress),
+                                ),if (progress != 1)
+                            IconButton(
+                                color: Colors.red,
+                                onPressed: () {
+                                  value.cancelDownload(index);
+                                },
+                                icon: const Icon(
+                                  Icons.cancel_outlined,
+                                  size: 50,
+                                )),
+                        ],
+                      )),
+                      Expanded(
+                        child: Text(
+                          '${value.downloading[index].title ?? "No Title"}\n${value.downloading[index].programName ?? ""}',
+                          maxLines: 4,
+                          textAlign: TextAlign.left,
+                        ),
                       ),
-                      subtitle: Text(
-                        value.downloading[index].description ??
-                            "No Description",
-                        maxLines: 1,
+                      Expanded(
+                        flex: 0,
+                        child: IconButton(
+                          icon: getIcon(value.downloadProgresses[index]),
+                          onPressed: () {
+                            switch (value
+                                .downloadProgresses[index].snapshot.state) {
+                              case TaskState.paused:
+                                value.downloadProgresses[index].resume();
+                                break;
+                              case TaskState.running:
+                                value.downloadProgresses[index].pause();
+                                break;
+                              case TaskState.success:
+                              case TaskState.canceled:
+                              case TaskState.error:
+                              default:
+
+                                value.downloading.removeAt(index);
+                                value.downloadProgresses.removeAt(index);
+                            }
+                          },
+                        ),
                       ),
-                      trailing:
-                          downloadActionButton(value.downloadProgresses[index]),
-                    ),
+                    ],
                   ),
                 );
               },
               itemCount: value.downloading.length,
             );
           } else {
+            //whenever there are no videos downloaded
             return const Column(
               children: [
                 Padding(padding: EdgeInsets.all(30)),
@@ -88,51 +133,37 @@ class Downloading extends StatelessWidget {
     );
   }
 
-  Widget downloadActionButton(DownloadTask task) {
+//helper function to return Icon based on the state
+  Icon getIcon(DownloadTask task) {
     switch (task.snapshot.state) {
       case TaskState.paused:
-        return Consumer<LibraryModel>(
-          builder: (context, value, child) => IconButton(
-            onPressed: () {
-              task.resume();
-              value.notify();
-            },
-            icon: const Icon(Icons.play_circle_outlined),
-          ),
-        );
+        return const Icon(Icons.play_circle_outlined);
       case TaskState.running:
-        return Consumer<LibraryModel>(
-          builder: (context, value, child) => IconButton(
-            onPressed: () {
-              task.pause();
-              value.notify();
-            },
-            icon: const Icon(Icons.pause),
-          ),
-        );
+        return const Icon(Icons.pause);
       case TaskState.success:
-        return const IconButton(
-          onPressed: null,
-          icon: Icon(Icons.done),
-        );
+        return const Icon(Icons.done);
       case TaskState.canceled:
-        return Consumer<LibraryModel>(
-          builder: (context, value, child) => IconButton(
-            onPressed: () {
-              task.cancel();
-              value.notify();
-            },
-            icon: const Icon(Icons.file_download_off),
-          ),
-        );
+        return const Icon(Icons.file_download_off);
       case TaskState.error:
       default:
-        return IconButton(
-          onPressed: () {
-            task.ignore();
-          },
-          icon: const Icon(Icons.error),
-        );
+        return const Icon(Icons.error);
+    }
+  }
+
+//helper String to return Icon based on the state
+  Text getString(DownloadTask task) {
+    switch (task.snapshot.state) {
+      case TaskState.paused:
+        return const Text("Resume");
+      case TaskState.running:
+        return const Text("Pause");
+      case TaskState.success:
+        return const Text("Download Successful");
+      case TaskState.canceled:
+        return const Text("Cancelled");
+      case TaskState.error:
+      default:
+        return const Text("Error");
     }
   }
 }

@@ -13,7 +13,7 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  //to show progress indicator during authentication
+  //to change the button text to progress indicator after the user pressed the [LOGIN] button
   bool _authenticating = false;
   @override
   Widget build(BuildContext context) {
@@ -33,7 +33,7 @@ class _SettingsState extends State<Settings> {
                 subtitle: value.darkMode ? const Text("On") : const Text("Off"),
                 value: value.darkMode,
                 onChanged: (dark) {
-                  value.handleDarkMode(dark: dark);
+                  value.setDarkMode(dark: dark);
                 }),
           ),
           Consumer<SettingModel>(
@@ -42,7 +42,7 @@ class _SettingsState extends State<Settings> {
                 "Language",
                 style: TextStyle(fontSize: 20),
               ),
-              subtitle: const Text("English"),
+              subtitle: Text(value.language),
               trailing: IconButton(
                 icon: const Icon(Icons.language),
                 onPressed: () async {
@@ -54,25 +54,27 @@ class _SettingsState extends State<Settings> {
                         children: [
                           TextButton(
                               onPressed: () {
-                                Navigator.pop(context);
+                                Navigator.pop(context, "am");
                               },
                               child: const Text("Amharic")),
                           TextButton(
                               onPressed: () {
-                                Navigator.pop(context);
+                                Navigator.pop(context, "en");
                               },
                               child: const Text("English")),
                           TextButton(
                               onPressed: () {
-                                Navigator.pop(context);
+                                Navigator.pop(context, "gez");
                               },
-                              child: const Text("Geez"))
+                              child: const Text(
+                                "Geez",
+                              ))
                         ],
                       );
                     },
                   );
                   if (lang != null) {
-                    value.handleLanguage(lang: lang);
+                    value.setLanguage(lang: lang);
                   }
                 },
               ),
@@ -100,7 +102,7 @@ class _SettingsState extends State<Settings> {
                                 border: OutlineInputBorder(
                                     borderRadius:
                                         BorderRadius.all(Radius.circular(10))),
-                                label: Text("email")),
+                                label: Text("Email")),
                           ),
                         ),
                         Padding(
@@ -111,7 +113,7 @@ class _SettingsState extends State<Settings> {
                               border: OutlineInputBorder(
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(10))),
-                              label: Text("password"),
+                              label: Text("Password"),
                             ),
                             obscureText: true,
                           ),
@@ -133,19 +135,12 @@ class _SettingsState extends State<Settings> {
                               await Navigator.pushNamed(
                                   context, RouteGenerator.live);
                             } on FirebaseAuthException catch (e) {
-                              if (e.code == 'user-not-found') {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text(
-                                            "No user found for that email.")));
-                              } else if (e.code == 'wrong-password') {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        dismissDirection:
-                                            DismissDirection.horizontal,
-                                        content: Text(
-                                            "Invalid email or password. try again!.")));
-                              }
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      dismissDirection:
+                                          DismissDirection.horizontal,
+                                      content: Text(
+                                          "Invalid email or password. try again!.")));
                             }
                             setState(() {
                               _authenticating = false;
@@ -160,7 +155,7 @@ class _SettingsState extends State<Settings> {
                   },
                 );
               },
-              icon: const Icon(Icons.lock),
+              icon: const Icon(Icons.admin_panel_settings),
               label: const Text("Admin Page"),
             ),
           )

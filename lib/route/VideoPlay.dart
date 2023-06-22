@@ -1,7 +1,11 @@
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:mk_tv_app/model/VideoInformation.dart';
+import 'package:mk_tv_app/model/libraryModel.dart';
 import 'package:mk_tv_app/model/videoPlayModel.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class VideoPlay extends StatelessWidget {
   final videoInformation;
@@ -9,12 +13,16 @@ class VideoPlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<VideoPlayModel>(
-      create: (context) => VideoPlayModel(videoInfo: videoInformation),
+      create: (context) => VideoPlayModel(videoInfo: videoInformation!),
       child: Scaffold(
         appBar: AppBar(
           title: Consumer<VideoPlayModel>(
               builder: (context, value, child) => value.canPlay
-                  ? const Icon(Icons.ondemand_video)
+                  ? TextButton.icon(
+                      icon: const Icon(Icons.ondemand_video),
+                      onPressed: null,
+                      label: const Text("Playing..."),
+                    )
                   : const Text("Loading...")),
           // backgroundColor: Colors.blue,
           foregroundColor: Colors.amber,
@@ -60,12 +68,12 @@ class VideoFullInfo extends StatelessWidget {
         children: const [
           FullVideoTitle(),
           FullVideoCategory(),
+          Divider(),
           SizedBox(
             height: 50,
             child: Center(child: VideoActionButtons()),
           ),
           VideoDescription(),
-          Divider(),
           // Divider(),
         ],
       ),
@@ -111,31 +119,83 @@ class VideoActionButtons extends StatelessWidget {
   const VideoActionButtons({super.key});
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      scrollDirection: Axis.horizontal,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(5.0),
-          child: ElevatedButton.icon(
-              label: const Text("watch later"),
-              onPressed: () {},
-              icon: const Icon(Icons.watch_later_outlined)),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(5.0),
-          child: ElevatedButton.icon(
-              label: const Text("share"),
-              onPressed: () {},
-              icon: const Icon(Icons.share)),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(5.0),
-          child: ElevatedButton.icon(
-              label: const Text("download"),
-              onPressed: () {},
-              icon: const Icon(Icons.download_rounded)),
-        ),
-      ],
+    return Consumer2<VideoPlayModel, LibraryModel>(
+      builder: (context, value, value2, child) => ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(5.0),
+            child: ElevatedButton.icon(
+                label: const Text("Watch later"),
+                onPressed: () async {
+                  SharedPreferences getprefs =
+                      await SharedPreferences.getInstance();
+
+                  bool Unsaved =
+                      false; //used to check whether the operation is unsaving or saving
+
+                  var listOfSaved = getprefs.getStringList("saved");
+
+                  final videoKey = value.videoInfo.key ?? "";
+                  if (listOfSaved != null) {
+                    if (listOfSaved.contains(videoKey)) {
+                      listOfSaved.remove(videoKey);
+                      Unsaved = true;
+                    } else {
+                      listOfSaved.add(videoKey);
+                    }
+                  } else {
+                    listOfSaved = [videoKey];
+                  }
+
+                  final isSaved =
+                      await getprefs.setStringList("saved", listOfSaved);
+                  if (isSaved) {
+                    if (Unsaved) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text("Video Unsaved Successfully!")));
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text("Video Saved Successfully!")));
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Video Saving Failed!")));
+                  }
+                },
+                icon: const Icon(Icons.watch_later_outlined)),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(5.0),
+            child: ElevatedButton.icon(
+                label: const Text("Share"),
+                onPressed: () async {
+                  final downloadUrl = value.videoInfo.videoUrl;
+
+                  await Share.share('Checkout this video: $downloadUrl');
+                },
+                icon: const Icon(Icons.share)),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(5.0),
+            child: ElevatedButton.icon(
+                label: const Text("Download"),
+                onPressed: () async {
+                  final isDownloaded = (await SharedPreferences.getInstance())
+                      .containsKey(value.videoInfo.key ?? "");
+                  if (isDownloaded) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("Video Already Downloaded!")));
+                  } else {
+                    value2.download(videoInfo: value.videoInfo);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("Video Downloading Started!")));
+                  }
+                },
+                icon: const Icon(Icons.download_rounded)),
+          ),
+        ],
+      ),
     );
   }
 }

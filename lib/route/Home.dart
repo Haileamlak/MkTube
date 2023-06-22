@@ -80,7 +80,7 @@ class Video extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<VideoListModel>(builder: (context, value, child) {
       if (value.listOfVideos.length > index) {
-        value.currentIndex = index;
+        // index = index;
         return Column(
           children: [
             GestureDetector(
@@ -97,15 +97,17 @@ class Video extends StatelessWidget {
                     height: 200, child: CupertinoActivityIndicator()),
               ),
             ),
-             VideoInfo(index: index),
+            VideoInfo(index: index),
             const Divider(height: 1)
           ],
         );
-      } else if (value.listOfVideos.length == index) {
-        value.getListOfVideos(
-            startAfter: value.listOfVideos[value.currentIndex]?.key);
-        return const SizedBox(height: 100, child: CircularProgressIndicator());
-      } else {
+      }
+      // else if (value.listOfVideos.length == index) {
+      //   value.getListOfVideos(
+      //       startAfter: value.listOfVideos[index]?.key);
+      //   return const SizedBox(height: 100, child: CircularProgressIndicator());
+      // }
+      else {
         return const SizedBox(height: 200, child: CupertinoActivityIndicator());
       }
     });
@@ -114,7 +116,7 @@ class Video extends StatelessWidget {
 
 class VideoInfo extends StatelessWidget {
   final index;
-  const VideoInfo({super.key,this.index});
+  const VideoInfo({super.key, this.index});
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -129,24 +131,27 @@ class VideoInfo extends StatelessWidget {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => VideoPlay(
-                        videoInformation:
-                            value.listOfVideos[index],
+                        videoInformation: value.listOfVideos[index],
                       ),
                     ),
                   );
                 },
-                child: const Column(
+                child: Column(
                   children: [
-                    VideoTitle(),
-                    VideoCategory(),
+                    VideoTitle(
+                      index: index,
+                    ),
+                    VideoCategory(index: index),
                   ],
                 ),
               ),
             ),
           ),
-          const Expanded(
+          Expanded(
             flex: 0,
-            child: VideoMoreActionButton(),
+            child: VideoMoreActionButton(
+              index: index,
+            ),
           )
         ],
       ),
@@ -155,7 +160,8 @@ class VideoInfo extends StatelessWidget {
 }
 
 class VideoTitle extends StatelessWidget {
-  const VideoTitle({super.key});
+  final index;
+  const VideoTitle({super.key, this.index});
   @override
   Widget build(BuildContext context) {
     return Consumer<VideoListModel>(
@@ -164,7 +170,7 @@ class VideoTitle extends StatelessWidget {
         child: Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            "${value.listOfVideos[value.currentIndex]?.title ?? ""} ",
+            "${value.listOfVideos[index]?.title ?? ""} ",
             style: const TextStyle(fontSize: 16, height: 1),
             maxLines: 2,
           ),
@@ -175,7 +181,8 @@ class VideoTitle extends StatelessWidget {
 }
 
 class VideoCategory extends StatelessWidget {
-  const VideoCategory({super.key});
+  final index;
+  const VideoCategory({super.key, this.index});
   @override
   Widget build(BuildContext context) {
     return Consumer<VideoListModel>(
@@ -184,7 +191,7 @@ class VideoCategory extends StatelessWidget {
         child: Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            "${value.listOfVideos[value.currentIndex]?.programName ?? ""} - ${getReleaseDuration(value.listOfVideos[value.currentIndex]?.releaseDate ?? DateTime.now())}",
+            "${value.listOfVideos[index]?.programName ?? ""} - ${getReleaseDurationFormatted(value.listOfVideos[index]?.releaseDate ?? DateTime.now())}",
             maxLines: 1,
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w300),
           ),
@@ -193,7 +200,7 @@ class VideoCategory extends StatelessWidget {
     );
   }
 
-  String getReleaseDuration(DateTime dt) {
+  String getReleaseDurationFormatted(DateTime dt) {
     final now = DateTime.now();
     if (now.year - dt.year > 0) {
       return "${now.year - dt.year} ${now.year - dt.year == 1 ? "year ago" : "years ago"}";
@@ -212,7 +219,8 @@ class VideoCategory extends StatelessWidget {
 }
 
 class VideoMoreActionButton extends StatelessWidget {
-  const VideoMoreActionButton({super.key});
+  final index;
+  const VideoMoreActionButton({super.key, this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -229,58 +237,81 @@ class VideoMoreActionButton extends StatelessWidget {
                     // title: const Text('AlertDialog Title'),
                     children: [
                       TextButton.icon(
-                          label: const Text("Save to Watch Later"),
-                          onPressed: () async {
-                            SharedPreferences getprefs =
-                                await SharedPreferences.getInstance();
+                        label: const Text("Save to Watch Later"),
+                        onPressed: () async {
+                          SharedPreferences getprefs =
+                              await SharedPreferences.getInstance();
 
-                            var listOfSaved = getprefs.getStringList("saved");
+                          bool Unsaved =
+                              false; //used to check whether the operation is unsaving or saving
 
-                            final videoKey =
-                                value.listOfVideos[value.currentIndex]?.key ??
-                                    "";
-                            if (listOfSaved != null) {
-                              if (listOfSaved.contains(videoKey)) {
-                                listOfSaved.remove(videoKey);
-                              } else {
-                                listOfSaved.add(videoKey);
-                              }
+                          var listOfSaved = getprefs.getStringList("saved");
+
+                          final videoKey = value.listOfVideos[index]?.key ?? "";
+                          if (listOfSaved != null) {
+                            if (listOfSaved.contains(videoKey)) {
+                              listOfSaved.remove(videoKey);
+                              Unsaved = true;
                             } else {
-                              listOfSaved = [videoKey];
+                              listOfSaved.add(videoKey);
                             }
+                          } else {
+                            listOfSaved = [videoKey];
+                          }
 
-                            final isSaved = await getprefs.setStringList(
-                                "saved", listOfSaved);
-                            if (isSaved) {
+                          final saveSuccessfull = await getprefs.setStringList(
+                              "saved", listOfSaved);
+                          if (saveSuccessfull) {
+                            if (Unsaved) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text("Video Unsaved Successfully!")));
+                            } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                       content:
                                           Text("Video Saved Successfully!")));
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text("Video Save Failed!")));
                             }
-                            Navigator.pop(context);
-                          },
-                          icon: const Icon(Icons.watch_later_outlined)),
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text("Video Saving Failed!")));
+                          }
+                          Navigator.pop(context);
+                        },
+                        icon: const Icon(Icons.watch_later_outlined),
+                      ),
                       TextButton.icon(
                           label: const Text("Download"),
                           onPressed: () async {
-                            value2.download(
-                                videoInfo:
-                                    value.listOfVideos[value.currentIndex]!);
+                            final isDownloaded = (await SharedPreferences.getInstance())
+                                .containsKey(
+                                    value.listOfVideos[index]!.key ?? "");
+                            if (isDownloaded) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text("Video Already Downloaded!")));
+                            } else {
+                              value2.download(
+                                  videoInfo: value.listOfVideos[index]!);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text("Video Downloading Started!")));
+                            }
                             Navigator.pop(context);
                           },
                           icon: const Icon(Icons.download_rounded)),
                       TextButton.icon(
                           label: const Text("Share"),
                           onPressed: () async {
-                            final downloadUrl = value
-                                .listOfVideos[value.currentIndex]!.videoUrl;
+                            final downloadUrl =
+                                value.listOfVideos[index]!.videoUrl;
 
                             await Share.share(
-                                'Download this video: $downloadUrl');
+                                'Checkout this video: $downloadUrl');
                             Navigator.pop(context);
                           },
                           icon: const Icon(Icons.share)),

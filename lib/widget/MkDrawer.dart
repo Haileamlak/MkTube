@@ -31,7 +31,7 @@ class MkDrawer extends StatelessWidget {
           ),
           const AboutListTile(
             icon: Icon(Icons.info_outline),
-            applicationName: "EOTC MK TV",
+            applicationName: "MkTube",
             applicationVersion: "1.0",
             applicationIcon: ImageIcon(
               AssetImage("lib/myassets/mklogo.png"),
