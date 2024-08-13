@@ -28,26 +28,26 @@
   <tr>
   </tr>
   <tr>
-    <td><img src="screenshots/splash.png" width=270 height=480></td>
-    <td><img src="screenshots/home blach.png" width=270 height=480></td>
-    <td><img src="screenshots/video actions.png" width=270 height=480></td>
+    <td><img src="screenshots/splash.jpg" width=270 height=480></td>
+    <td><img src="screenshots/home blach.jpg" width=270 height=480></td>
+    <td><img src="screenshots/video actions.jpg" width=270 height=480></td>
   </tr>
 
   <tr>
-    <td><img src="screenshots/video playing.png" width=270 height=480></td>
-    <td><img src="screenshots/saved videos.png" width=270 height=480></td>
-    <td><img src="screenshots/live stream admin.png" width=270 height=480></td>
+    <td><img src="screenshots/video playing.jpg" width=270 height=480></td>
+    <td><img src="screenshots/saved videos.jpg" width=270 height=480></td>
+    <td><img src="screenshots/live stream admin.jpg" width=270 height=480></td>
   </tr>
   
 
   <tr>
-    <td><img src="screenshots/live.png" width=270 height=480></td>
-    <td><img src="screenshots/no live.png" width=270 height=480></td>
-    <td><img src="screenshots/language.png" width=270 height=480></td>
+    <td><img src="screenshots/live.jpg" width=270 height=480></td>
+    <td><img src="screenshots/no live.jpg" width=270 height=480></td>
+    <td><img src="screenshots/language.jpg" width=270 height=480></td>
   </tr>
   
   <tr>
-    <td><img src="screenshots/video list admin.png" width=405 ></td>
+    <td><img src="screenshots/video list admin.jpg" width=405 ></td>
     <td><img src="screenshots/add video admin" width=405></td>
   </tr>
         
