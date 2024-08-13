@@ -47,8 +47,8 @@
   </tr>
   
   <tr>
-    <td><img src="screenshots/video list admin.jpg" width=405 ></td>
-    <td><img src="screenshots/add video admin" width=405></td>
+    <td><img src="screenshots/video list admin.jpg" width=405 height=360></td>
+    <td><img src="screenshots/add video admin.jpg" width=405 height=360></td>
   </tr>
         
  </table>
