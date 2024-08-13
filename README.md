@@ -27,12 +27,13 @@
 <table>
   <tr>
   </tr>
+
   <tr>
     <td><img src="screenshots/splash.jpg" width=270 height=480></td>
     <td><img src="screenshots/home blach.jpg" width=270 height=480></td>
     <td><img src="screenshots/video actions.jpg" width=270 height=480></td>
   </tr>
-
+  
   <tr>
     <td><img src="screenshots/video playing.jpg" width=270 height=480></td>
     <td><img src="screenshots/saved videos.jpg" width=270 height=480></td>
